@@ -33,8 +33,7 @@ import { NetworkTypeHelper } from '@/core/utils/NetworkTypeHelper'
 import { FilterHelpers } from '@/core/utils/FilterHelpers'
 import { SimpleObjectStorage } from '@/core/database/backends/SimpleObjectStorage'
 import { AccountModel, AccountType } from '@/core/database/entities/AccountModel'
-import TransportWebUSB from '@ledgerhq/hw-transport-webusb'
-import { SymbolLedger } from '@/core/utils/Ledger'
+import { LedgerService} from '@/services/LedgerService/LedgerService'
 import { AccountService } from '@/services/AccountService'
 
 /// end-region custom types
@@ -64,11 +63,14 @@ export class FormProfileCreationTs extends Vue {
 
   public accountService: AccountService
 
+  public ledgerService: LedgerService
+
   isLedger = false
   created() {
     this.accountService = new AccountService()
     const { isLedger } = this.$route.meta
     this.isLedger = isLedger
+    this.ledgerService = new LedgerService()
   }
 
   /**
@@ -212,12 +214,13 @@ export class FormProfileCreationTs extends Vue {
     this.$Notice.success({
       title: this['$t']('Verify information in your device!') + '',
     })
-    const transport = await TransportWebUSB.create()
-    const symbolLedger = new SymbolLedger(transport, 'XYM')
-    const accountResult = await symbolLedger.getAccount(`m/44'/4343'/0'/0'/0'`)
+    // const transport = await TransportWebUSB.create()
+    // const symbolLedger = new SymbolLedger(transport, 'XYM')
+    const accountResult = await this.ledgerService.getAccount(`m/44'/4343'/0'/0'/0'`)
     const { publicKey, path } = accountResult
+    console.log(accountResult)
     const address = PublicAccount.createFromPublicKey(publicKey, this.formItems.networkType).address
-    transport.close()
+    // transport.close()
 
     // add account to list
     const accName = this.currentProfile.profileName

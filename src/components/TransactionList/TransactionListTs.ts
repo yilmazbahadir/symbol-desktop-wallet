@@ -16,8 +16,6 @@
 import { mapGetters } from 'vuex'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 import { AggregateTransaction, MosaicId, Transaction } from 'symbol-sdk'
-import TransportWebUSB from '@ledgerhq/hw-transport-webusb'
-import { SymbolLedger } from '@/core/utils/Ledger'
 import { TransactionAnnouncerService } from '@/services/TransactionAnnouncerService'
 // internal dependencies
 import { AccountModel, AccountType } from '@/core/database/entities/AccountModel'
@@ -33,6 +31,7 @@ import TransactionListFilters from '@/components/TransactionList/TransactionList
 // @ts-ignore
 import TransactionTable from '@/components/TransactionList/TransactionTable/TransactionTable.vue'
 import { TransactionGroupState } from '@/store/Transaction'
+import { LedgerService} from '@/services/LedgerService/LedgerService'
 
 @Component({
   components: {
@@ -211,6 +210,11 @@ export class TransactionListTs extends Vue {
 
   public generationHash: string
 
+  public ledgerService: LedgerService
+
+  public async created() {
+    this.ledgerService = new LedgerService()
+  }
   public onClickTransaction(transaction: Transaction | AggregateTransaction) {
     const isSigner = transaction.signer.address.plain() == this.currentAccount.address ? true : false
     if (transaction.hasMissingSignatures()) {
@@ -258,14 +262,16 @@ export class TransactionListTs extends Vue {
     this.$Notice.success({
       title: this['$t']('Verify information in your device!') + '',
     })
-    const transport = await TransportWebUSB.create()
     const currentPath = this.currentAccount.path
     const addr = this.currentAccount.address
-    const symbolLedger = new SymbolLedger(transport, 'XYM')
-    const accountResult = await symbolLedger.getAccount(currentPath)
-    const signerPublickey = accountResult.publicKey
-    const signature = await symbolLedger.signCosignatureTransaction(currentPath, transaction, signerPublickey)
-    transport.close()
+    const signerPublickey = this.currentAccount.publicKey
+    const signature = await this.ledgerService.signCosignatureTransaction(
+      currentPath,
+      transaction,
+      this.generationHash,
+      signerPublickey,
+    )
+
     this.$store.dispatch(
       'diagnostic/ADD_DEBUG',
       `Co-signed transaction with account ${addr} and result: ${JSON.stringify({
