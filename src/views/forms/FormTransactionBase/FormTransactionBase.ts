@@ -40,8 +40,8 @@ import { NetworkConfigurationModel } from '@/core/database/entities/NetworkConfi
 // @ts-ignore
 import { TransactionAnnouncerService } from '@/services/TransactionAnnouncerService'
 import { Observable, of } from 'rxjs'
-import TransportWebUSB from '@ledgerhq/hw-transport-webusb'
-import { SymbolLedger } from '@/core/utils/Ledger'
+
+import { LedgerService} from '@/services/LedgerService/LedgerService'
 @Component({
   computed: {
     ...mapGetters({
@@ -169,7 +169,11 @@ export class FormTransactionBase extends Vue {
    * Hook called when the component is mounted
    * @return {void}
    */
+
+  public ledgerService: LedgerService
+
   public async created() {
+    this.ledgerService = new LedgerService()
     this.resetForm()
   }
 
@@ -300,16 +304,19 @@ export class FormTransactionBase extends Vue {
       this.command = this.createTransactionCommand()
       this.onShowConfirmationModal()
     } else {
-      try {
+      // try {
         this.$Notice.success({
           title: this['$t']('Verify information in your device!') + '',
         })
-        const transport = await TransportWebUSB.create()
-        const symbolLedger = new SymbolLedger(transport, 'XYM')
+        // const transport = await TransportWebUSB.create()
+        // const symbolLedger = new SymbolLedger(transport, 'XYM')
         const currentPath = this.currentAccount.path
+        console.log(currentPath)
         const networkType = this.currentProfile.networkType
-        const accountResult = await symbolLedger.getAccount(currentPath)
+        const accountResult = await this.ledgerService.getAccount(currentPath)
+        console.log(accountResult)
         const publicKey = accountResult.publicKey
+        console.log(publicKey)
         const ledgerAccount = PublicAccount.createFromPublicKey(publicKey.toUpperCase(), networkType)
         const multisigAccount = PublicAccount.createFromPublicKey(this.selectedSigner.publicKey, this.networkType)
         this.command = this.createTransactionCommand()
@@ -322,7 +329,7 @@ export class FormTransactionBase extends Vue {
         if (txMode == 'SIMPLE') {
           stageTransactions.map(async (t) => {
             const transaction = this.command.calculateSuggestedMaxFee(t)
-            await symbolLedger
+            await this.ledgerService
               .signTransaction(currentPath, transaction, this.generationHash, ledgerAccount.publicKey)
               .then((res) => {
                 // - notify about successful transaction announce
@@ -345,7 +352,7 @@ export class FormTransactionBase extends Vue {
             ),
           )
 
-          await symbolLedger
+          await this.ledgerService
             .signTransaction(currentPath, aggregate, this.generationHash, ledgerAccount.publicKey)
             .then((res) => {
               // - notify about successful transaction announce
@@ -366,7 +373,7 @@ export class FormTransactionBase extends Vue {
               maxFee,
             ),
           )
-          const signedAggregateTransaction = await symbolLedger
+          const signedAggregateTransaction = await this.ledgerService
             .signTransaction(currentPath, aggregate, this.generationHash, ledgerAccount.publicKey)
             .then((signedAggregateTransaction) => {
               return signedAggregateTransaction
@@ -384,7 +391,7 @@ export class FormTransactionBase extends Vue {
               maxFee,
             ),
           )
-          const signedHashLock = await symbolLedger
+          const signedHashLock = await this.ledgerService
             .signTransaction(currentPath, hashLock, this.generationHash, ledgerAccount.publicKey)
             .then((res) => {
               return res
@@ -407,13 +414,13 @@ export class FormTransactionBase extends Vue {
             })
           })
         }
-      } catch (error) {
-        console.error(error)
-        this.$Notice.error({
-          title: this['$t']('Please check your device connection!') + '',
-        })
-        this.hasConfirmationModal = false
-      }
+      // } catch (error) {
+      //   console.error(error)
+      //   this.$Notice.error({
+      //     title: this['$t']('Please check your device connection!') + '',
+      //   })
+      //   this.hasConfirmationModal = false
+      // }
     }
   }
   /**

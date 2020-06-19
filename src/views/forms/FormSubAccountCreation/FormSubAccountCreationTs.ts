@@ -17,8 +17,7 @@ import { Component, Vue } from 'vue-property-decorator'
 import { mapGetters } from 'vuex'
 import { Account, NetworkType, Password, Crypto, PublicAccount } from 'symbol-sdk'
 import { MnemonicPassPhrase } from 'symbol-hd-wallets'
-import TransportWebUSB from '@ledgerhq/hw-transport-webusb'
-import { SymbolLedger } from '@/core/utils/Ledger'
+import { LedgerService} from '@/services/LedgerService/LedgerService'
 // internal dependencies
 import { ValidationRuleset } from '@/core/validation/ValidationRuleset'
 import { DerivationService } from '@/services/DerivationService'
@@ -124,9 +123,12 @@ export class FormSubAccountCreationTs extends Vue {
     observer: InstanceType<typeof ValidationObserver>
   }
 
+  public ledgerService: LedgerService
+
   public created() {
     this.accountService = new AccountService()
     this.paths = new DerivationService()
+    this.ledgerService = new LedgerService()
   }
 
   /// region computed properties getter/setter
@@ -290,13 +292,13 @@ export class FormSubAccountCreationTs extends Vue {
       this.$Notice.success({
         title: this['$t']('Verify information in your device!') + '',
       })
-      const transport = await TransportWebUSB.create()
-      const symbolLedger = new SymbolLedger(transport, 'XYM')
+      // const transport = await TransportWebUSB.create()
+      // const symbolLedger = new SymbolLedger(transport, 'XYM')
       const nextPath = this.paths.getNextAccountPath(this.knownPaths)
-      const accountResult = await symbolLedger.getAccount(nextPath)
+      const accountResult = await this.ledgerService.getAccount(nextPath)
       const { publicKey, path } = accountResult
       const address = PublicAccount.createFromPublicKey(publicKey, this.networkType).address
-      transport.close()
+      // transport.close()
       const accName = Object.values(this.currentAccount)[1]
       return {
         id: SimpleObjectStorage.generateIdentifier(),
