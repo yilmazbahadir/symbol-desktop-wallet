@@ -218,6 +218,7 @@ export class FormProfileCreationTs extends Vue {
     // const symbolLedger = new SymbolLedger(transport, 'XYM')
     const accountResult = await this.ledgerService.getAccount(`m/44'/4343'/0'/0'/0'`)
     const { publicKey, path } = accountResult
+    console.log(accountResult)
     const address = PublicAccount.createFromPublicKey(publicKey, this.formItems.networkType).address
     // transport.close()
 
