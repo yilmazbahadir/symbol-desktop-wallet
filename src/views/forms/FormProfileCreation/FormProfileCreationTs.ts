@@ -33,7 +33,7 @@ import { NetworkTypeHelper } from '@/core/utils/NetworkTypeHelper'
 import { FilterHelpers } from '@/core/utils/FilterHelpers'
 import { SimpleObjectStorage } from '@/core/database/backends/SimpleObjectStorage'
 import { AccountModel, AccountType } from '@/core/database/entities/AccountModel'
-import { LedgerService} from '@/services/LedgerService/LedgerService'
+import { LedgerService } from '@/services/LedgerService/LedgerService'
 import { AccountService } from '@/services/AccountService'
 
 /// end-region custom types
