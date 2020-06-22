@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
+console.log('---------------------build.js- in public 1---------------')
 const path = require('path')
+console.log('---------------------build.js- in public 2---------------')
 const {app, BrowserWindow, shell, globalShortcut, Menu, ipcMain} = require('electron')
 const electron = require('electron')
 const nodehid = require('@ledgerhq/hw-transport-node-hid')
@@ -93,6 +95,7 @@ const template = [{
     },
   }],
 }]
+console.log('-----------process.platform',process.platform)
 if (process.platform === 'darwin') {
   template.unshift({
     label: name,
@@ -195,6 +198,9 @@ if (process.platform !== 'darwin') {
 // //---------------------------
 
 function initialize() {
+  // LedgerCallServer
+
+  console.log('--------------initialize---------------')
   function createMac() {
     const size = require('electron').screen.getPrimaryDisplay().workAreaSize
     const width = parseInt(size.width)
