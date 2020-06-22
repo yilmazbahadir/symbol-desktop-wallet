@@ -41,7 +41,7 @@ import { NetworkConfigurationModel } from '@/core/database/entities/NetworkConfi
 import { TransactionAnnouncerService } from '@/services/TransactionAnnouncerService'
 import { Observable, of } from 'rxjs'
 
-import { LedgerService} from '@/services/LedgerService/LedgerService'
+import { LedgerService } from '@/services/LedgerService/LedgerService'
 @Component({
   computed: {
     ...mapGetters({
@@ -305,55 +305,32 @@ export class FormTransactionBase extends Vue {
       this.onShowConfirmationModal()
     } else {
       // try {
-        this.$Notice.success({
-          title: this['$t']('Verify information in your device!') + '',
-        })
-        // const transport = await TransportWebUSB.create()
-        // const symbolLedger = new SymbolLedger(transport, 'XYM')
-        const currentPath = this.currentAccount.path
-        console.log(currentPath)
-        const networkType = this.currentProfile.networkType
-        const accountResult = await this.ledgerService.getAccount(currentPath)
-        console.log(accountResult)
-        const publicKey = accountResult.publicKey
-        console.log(publicKey)
-        const ledgerAccount = PublicAccount.createFromPublicKey(publicKey.toUpperCase(), networkType)
-        const multisigAccount = PublicAccount.createFromPublicKey(this.selectedSigner.publicKey, this.networkType)
-        this.command = this.createTransactionCommand()
-        const stageTransactions = this.command.stageTransactions
-        const maxFee = stageTransactions.sort((a, b) => a.maxFee.compare(b.maxFee))[0].maxFee
-        // - open signature modal
+      this.$Notice.success({
+        title: this['$t']('Verify information in your device!') + '',
+      })
+      // const transport = await TransportWebUSB.create()
+      // const symbolLedger = new SymbolLedger(transport, 'XYM')
+      const currentPath = this.currentAccount.path
+      console.log(currentPath)
+      const networkType = this.currentProfile.networkType
+      const accountResult = await this.ledgerService.getAccount(currentPath)
+      console.log(accountResult)
+      const publicKey = accountResult.publicKey
+      console.log(publicKey)
+      const ledgerAccount = PublicAccount.createFromPublicKey(publicKey.toUpperCase(), networkType)
+      const multisigAccount = PublicAccount.createFromPublicKey(this.selectedSigner.publicKey, this.networkType)
+      this.command = this.createTransactionCommand()
+      const stageTransactions = this.command.stageTransactions
+      const maxFee = stageTransactions.sort((a, b) => a.maxFee.compare(b.maxFee))[0].maxFee
+      // - open signature modal
 
-        const txMode = this.command.mode
+      const txMode = this.command.mode
 
-        if (txMode == 'SIMPLE') {
-          stageTransactions.map(async (t) => {
-            const transaction = this.command.calculateSuggestedMaxFee(t)
-            await this.ledgerService
-              .signTransaction(currentPath, transaction, this.generationHash, ledgerAccount.publicKey)
-              .then((res) => {
-                // - notify about successful transaction announce
-                this.$store.dispatch('notification/ADD_SUCCESS', 'success_transactions_signed')
-                this.$emit('success')
-                this.onConfirmationSuccess()
-                const services = new TransactionAnnouncerService(this.$store)
-                services.announce(res)
-              })
-              .catch((err) => console.error(err))
-          })
-        } else if (txMode == 'AGGREGATE') {
-          const aggregate = this.command.calculateSuggestedMaxFee(
-            AggregateTransaction.createComplete(
-              Deadline.create(),
-              stageTransactions.map((t) => t.toAggregate(multisigAccount)),
-              this.networkType,
-              [],
-              maxFee,
-            ),
-          )
-
+      if (txMode == 'SIMPLE') {
+        stageTransactions.map(async (t) => {
+          const transaction = this.command.calculateSuggestedMaxFee(t)
           await this.ledgerService
-            .signTransaction(currentPath, aggregate, this.generationHash, ledgerAccount.publicKey)
+            .signTransaction(currentPath, transaction, this.generationHash, ledgerAccount.publicKey)
             .then((res) => {
               // - notify about successful transaction announce
               this.$store.dispatch('notification/ADD_SUCCESS', 'success_transactions_signed')
@@ -363,57 +340,74 @@ export class FormTransactionBase extends Vue {
               services.announce(res)
             })
             .catch((err) => console.error(err))
-        } else {
-          const aggregate = this.command.calculateSuggestedMaxFee(
-            AggregateTransaction.createBonded(
-              Deadline.create(),
-              stageTransactions.map((t) => t.toAggregate(multisigAccount)),
-              this.networkType,
-              [],
-              maxFee,
-            ),
-          )
-          const signedAggregateTransaction = await this.ledgerService
-            .signTransaction(currentPath, aggregate, this.generationHash, ledgerAccount.publicKey)
-            .then((signedAggregateTransaction) => {
-              return signedAggregateTransaction
-            })
-          const hashLock = this.command.calculateSuggestedMaxFee(
-            LockFundsTransaction.create(
-              Deadline.create(),
-              new Mosaic(
-                this.networkMosaic,
-                UInt64.fromNumericString(this.networkConfiguration.lockedFundsPerAggregate),
-              ),
-              UInt64.fromUint(1000),
-              signedAggregateTransaction,
-              this.networkType,
-              maxFee,
-            ),
-          )
-          const signedHashLock = await this.ledgerService
-            .signTransaction(currentPath, hashLock, this.generationHash, ledgerAccount.publicKey)
-            .then((res) => {
-              return res
-            })
-          const signedTransactions: Observable<SignedTransaction>[] = [
-            of(signedHashLock),
-            of(signedAggregateTransaction),
-          ]
-          // - notify about successful transaction announce
-          this.$store.dispatch('notification/ADD_SUCCESS', 'success_transactions_signed')
-          this.$emit('success')
-          this.onConfirmationSuccess()
-          const service = new TransactionAnnouncerService(this.$store)
-          const announcements = await of(this.command.announceHashAndAggregateBonded(service, signedTransactions))
-          announcements.forEach((announcement) => {
-            announcement.subscribe((res) => {
-              if (!res.success) {
-                this.$store.dispatch('notification/ADD_ERROR', res.error, { root: true })
-              }
-            })
+        })
+      } else if (txMode == 'AGGREGATE') {
+        const aggregate = this.command.calculateSuggestedMaxFee(
+          AggregateTransaction.createComplete(
+            Deadline.create(),
+            stageTransactions.map((t) => t.toAggregate(multisigAccount)),
+            this.networkType,
+            [],
+            maxFee,
+          ),
+        )
+
+        await this.ledgerService
+          .signTransaction(currentPath, aggregate, this.generationHash, ledgerAccount.publicKey)
+          .then((res) => {
+            // - notify about successful transaction announce
+            this.$store.dispatch('notification/ADD_SUCCESS', 'success_transactions_signed')
+            this.$emit('success')
+            this.onConfirmationSuccess()
+            const services = new TransactionAnnouncerService(this.$store)
+            services.announce(res)
           })
-        }
+          .catch((err) => console.error(err))
+      } else {
+        const aggregate = this.command.calculateSuggestedMaxFee(
+          AggregateTransaction.createBonded(
+            Deadline.create(),
+            stageTransactions.map((t) => t.toAggregate(multisigAccount)),
+            this.networkType,
+            [],
+            maxFee,
+          ),
+        )
+        const signedAggregateTransaction = await this.ledgerService
+          .signTransaction(currentPath, aggregate, this.generationHash, ledgerAccount.publicKey)
+          .then((signedAggregateTransaction) => {
+            return signedAggregateTransaction
+          })
+        const hashLock = this.command.calculateSuggestedMaxFee(
+          LockFundsTransaction.create(
+            Deadline.create(),
+            new Mosaic(this.networkMosaic, UInt64.fromNumericString(this.networkConfiguration.lockedFundsPerAggregate)),
+            UInt64.fromUint(1000),
+            signedAggregateTransaction,
+            this.networkType,
+            maxFee,
+          ),
+        )
+        const signedHashLock = await this.ledgerService
+          .signTransaction(currentPath, hashLock, this.generationHash, ledgerAccount.publicKey)
+          .then((res) => {
+            return res
+          })
+        const signedTransactions: Observable<SignedTransaction>[] = [of(signedHashLock), of(signedAggregateTransaction)]
+        // - notify about successful transaction announce
+        this.$store.dispatch('notification/ADD_SUCCESS', 'success_transactions_signed')
+        this.$emit('success')
+        this.onConfirmationSuccess()
+        const service = new TransactionAnnouncerService(this.$store)
+        const announcements = await of(this.command.announceHashAndAggregateBonded(service, signedTransactions))
+        announcements.forEach((announcement) => {
+          announcement.subscribe((res) => {
+            if (!res.success) {
+              this.$store.dispatch('notification/ADD_ERROR', res.error, { root: true })
+            }
+          })
+        })
+      }
       // } catch (error) {
       //   console.error(error)
       //   this.$Notice.error({

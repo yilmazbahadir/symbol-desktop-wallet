@@ -12,7 +12,7 @@ node_modules
 *.js.map
 /www
 src/**/*.map
-src/**/*.js
+# src/**/*.js
 coverage
 build
 __tests__/**/*.map
