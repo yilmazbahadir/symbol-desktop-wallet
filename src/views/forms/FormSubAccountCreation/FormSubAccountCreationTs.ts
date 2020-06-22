@@ -17,7 +17,7 @@ import { Component, Vue } from 'vue-property-decorator'
 import { mapGetters } from 'vuex'
 import { Account, NetworkType, Password, Crypto, PublicAccount } from 'symbol-sdk'
 import { MnemonicPassPhrase } from 'symbol-hd-wallets'
-import { LedgerService} from '@/services/LedgerService/LedgerService'
+import { LedgerService } from '@/services/LedgerService/LedgerService'
 // internal dependencies
 import { ValidationRuleset } from '@/core/validation/ValidationRuleset'
 import { DerivationService } from '@/services/DerivationService'

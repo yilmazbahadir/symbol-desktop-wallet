@@ -31,7 +31,7 @@ import TransactionListFilters from '@/components/TransactionList/TransactionList
 // @ts-ignore
 import TransactionTable from '@/components/TransactionList/TransactionTable/TransactionTable.vue'
 import { TransactionGroup } from '@/store/Transaction'
-import { LedgerService} from '@/services/LedgerService/LedgerService'
+import { LedgerService } from '@/services/LedgerService/LedgerService'
 
 @Component({
   components: {
