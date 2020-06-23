@@ -6,7 +6,6 @@ export class LedgerService {
     const param = {
       currentPath: currentPath,
     }
-    console.log('<<<<currentPath>>>>', currentPath)
     const host = 'http://localhost:6789'
     try {
       const result = await fetch(host + '/ledger/account/', {
@@ -18,7 +17,6 @@ export class LedgerService {
       })
       const data = await result.json()
       const { publicKey, path } = data
-      console.log('<<<<<<data>>>>>>', data)
       return { publicKey, path }
     } catch {
       console.log('Please ensure that your device is opening with ledger-bolos-app!')
