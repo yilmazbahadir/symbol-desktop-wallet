@@ -23,7 +23,7 @@
     "release:mac": "electron-builder --mac",
     "release:win": "electron-builder --win",
     "release:lin": "electron-builder --linux deb snap tar.xz",
-    "package": "electron-packager . --production",
+    "package": "npm run build && electron-packager . --production",
     "lint": "npm run prettier && npm run eslint",
     "lint:fix": "npm run prettier:fix && npm run eslint:fix",
     "eslint": "eslint src/ --ext .ts && eslint src/ --ext .vue && eslint __tests__/ --ext .ts && eslint __mocks__/ --ext .ts",

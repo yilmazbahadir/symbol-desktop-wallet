@@ -29,18 +29,11 @@ app.use(
 
 async function account(req, res) {
   const { currentPath } = req.body
-  // alert('This is account function in LedgerCallServer!');
-  console.log('--------------########___________currentPath in public/ledgerCallServer is :', currentPath)
-  const transport = await TransportNodeHid['default'].open('') //["default"].create();
-  console.log('transport', transport)
+  const transport = await TransportNodeHid['default'].open('')
   const symbolLedger = new SymbolLedger.SymbolLedger(transport, 'XYM')
-  console.log('symbolLedger', symbolLedger)
   const accountResult = await symbolLedger.getAccount(currentPath)
-  console.log('accountResult', accountResult)
   const { address, publicKey, path } = accountResult
   transport.close()
-  console.log('----------------req:', req)
-  console.log('----------------accountResult', accountResult)
   res.send({ address, publicKey, path })
 }
 
@@ -77,23 +70,12 @@ async function signCosignatureTransaction(req, res) {
 }
 
 app.post('/ledger/account', async (req, res) => {
-  // JSAlert.alert("this is alert in Post")
-  console.log('post account data to /ledger/account ')
   account(req, res)
-
-  // const  address= 'TCTBZLHW5R6VQW2TER33WCYAQ5JK2K5MZAUKKWWJ'
-  // const  publicKey= '68db1b91fba59f04eefb98111790e1c3de177ffadc6ef039ded83b45c97093b9'
-  // const  path= "m/44'/4343'/152'/0'/0'"
-
-  // res.send({address,publicKey,path})
 })
 app.post('/ledger/sign', async (req, res) => {
-  // JSAlert.alert("this is alert in Post")
-  console.log('Post signed data to /ledger/account ')
   sign(req, res)
 })
 app.post('/ledger/signCosignature', async (req, res) => {
-  console.log('post CosignatureSignedTx data to /ledger/account ')
   signCosignatureTransaction(req, res)
 })
 
