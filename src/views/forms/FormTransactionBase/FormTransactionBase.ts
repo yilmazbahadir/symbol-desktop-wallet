@@ -326,15 +326,11 @@ export class FormTransactionBase extends Vue {
       this.$Notice.success({
         title: this['$t']('Verify information in your device!') + '',
       })
-      // const transport = await TransportWebUSB.create()
-      // const symbolLedger = new SymbolLedger(transport, 'XYM')
+
       const currentPath = this.currentAccount.path
-      console.log(currentPath)
       const networkType = this.currentProfile.networkType
       const accountResult = await this.ledgerService.getAccount(currentPath)
-      console.log(accountResult)
       const publicKey = accountResult.publicKey
-      console.log(publicKey)
       const ledgerAccount = PublicAccount.createFromPublicKey(publicKey.toUpperCase(), networkType)
       const multisigAccount = PublicAccount.createFromPublicKey(this.command.signerPublicKey, this.networkType)
       this.command = this.createTransactionCommand()
@@ -426,13 +422,6 @@ export class FormTransactionBase extends Vue {
           })
         })
       }
-      // } catch (error) {
-      //   console.error(error)
-      //   this.$Notice.error({
-      //     title: this['$t']('Please check your device connection!') + '',
-      //   })
-      //   this.hasConfirmationModal = false
-      // }
     }
   }
   /**

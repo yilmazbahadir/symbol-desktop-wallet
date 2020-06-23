@@ -46,13 +46,11 @@ class SymbolLedger {
     const response = await this.transport.send(cla, ins, p1, p2, data)
 
     const result = {
-      // address: '',
       publicKey: '',
       path: '',
     }
-    // const addressLength = response[0]
+
     const publicKeyLength = response[0]
-    // result.address = response.slice(1, 1 + publicKeyLength).toString('ascii')
     result.publicKey = response.slice(1, 1 + publicKeyLength).toString('hex')
     result.path = path
     return result
@@ -77,7 +75,6 @@ class SymbolLedger {
     var rawPayload = transferTransaction
     var signingBytes = networkGenerationHash + rawPayload.slice(216)
     var rawTx = Buffer.from(signingBytes, 'hex')
-    // symbol-sdk 0.17.3
     let twiceTransfer
     // The length of the APDU buffer is 255Bytes
     if (rawTx.length > 446) {
