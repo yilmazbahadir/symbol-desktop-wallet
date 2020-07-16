@@ -317,9 +317,9 @@ export class FormTransactionBase extends Vue {
    * @return {void}
    */
   public async onSubmit() {
+    // - open signature modal
+    this.command = this.createTransactionCommand()
     if (this.currentAccount.type != AccountType.fromDescriptor('Ledger')) {
-      // - open signature modal
-      this.command = this.createTransactionCommand()
       this.onShowConfirmationModal()
     } else {
       // try {
@@ -331,7 +331,6 @@ export class FormTransactionBase extends Vue {
       const publicKey = accountResult.publicKey
       const ledgerAccount = PublicAccount.createFromPublicKey(publicKey.toUpperCase(), networkType)
       const multisigAccount = PublicAccount.createFromPublicKey(this.command.signerPublicKey, this.networkType)
-      this.command = this.createTransactionCommand()
       const stageTransactions = this.command.stageTransactions
       const maxFee = stageTransactions.sort((a, b) => a.maxFee.compare(b.maxFee))[0].maxFee
       // - open signature modal
