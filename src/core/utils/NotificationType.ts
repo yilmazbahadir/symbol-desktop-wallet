@@ -112,4 +112,9 @@ export enum NotificationType {
   WRONG_WALLET_NAME_ERROR = 'wrong_wallet_name_error',
   COPY_FAILED = 'copy_failed',
   INVALID_NODE = 'invalid_node',
+  VERIFY_DEVICE_INFO = 'verify_information_in_your_device',
+  CONDITIONS_OF_USE_NOT_SATISFIED = 'conditions_of_use_not_satisfied',
+  TRANSACTION_LENGTH_IS_OVER_THE_LIMIT = 'transaction_length_is_over_the_limit',
+  TRANSACTION_CANCELED = 'transaction_canceled',
+  IMPORT_ACCOUNT_SUCCESSFULLY = 'import_account_successfully',
 }

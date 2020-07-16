@@ -41,7 +41,7 @@ import { NetworkConfigurationModel } from '@/core/database/entities/NetworkConfi
 // @ts-ignore
 import { TransactionAnnouncerService } from '@/services/TransactionAnnouncerService'
 import { Observable, of } from 'rxjs'
-
+import { NotificationType } from '@/core/utils/NotificationType'
 import { LedgerService } from '@/services/LedgerService/LedgerService'
 @Component({
   computed: {
@@ -323,9 +323,7 @@ export class FormTransactionBase extends Vue {
       this.onShowConfirmationModal()
     } else {
       // try {
-      this.$Notice.success({
-        title: this['$t']('Verify information in your device!') + '',
-      })
+      this.$store.dispatch('notification/ADD_SUCCESS', NotificationType.VERIFY_DEVICE_INFO)
 
       const currentPath = this.currentAccount.path
       const networkType = this.currentProfile.networkType

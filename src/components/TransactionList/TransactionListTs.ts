@@ -31,7 +31,8 @@ import TransactionListFilters from '@/components/TransactionList/TransactionList
 // @ts-ignore
 import TransactionTable from '@/components/TransactionList/TransactionTable/TransactionTable.vue'
 import { TransactionGroupState } from '@/store/Transaction'
-import { LedgerService} from '@/services/LedgerService/LedgerService'
+import { LedgerService } from '@/services/LedgerService/LedgerService'
+import { NotificationType } from '@/core/utils/NotificationType'
 
 @Component({
   components: {
@@ -259,9 +260,7 @@ export class TransactionListTs extends Vue {
   }
 
   async signWithLedger(transaction: AggregateTransaction) {
-    this.$Notice.success({
-      title: this['$t']('Verify information in your device!') + '',
-    })
+    this.$store.dispatch('notification/ADD_SUCCESS', NotificationType.VERIFY_DEVICE_INFO)
     const currentPath = this.currentAccount.path
     const addr = this.currentAccount.address
     const signerPublickey = this.currentAccount.publicKey

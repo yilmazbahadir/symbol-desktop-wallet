@@ -1,5 +1,7 @@
 import * as BIPPath from 'bip32-path'
 import app from '@/main'
+import { Store } from 'vuex'
+import { NotificationType } from '@/core/utils/NotificationType'
 import { Transaction, SignedTransaction, Convert, CosignatureSignedTransaction, AggregateTransaction } from 'symbol-sdk'
 
 /**
@@ -20,6 +22,7 @@ const MAX_CHUNK_SIZE = 255
 
 export class SymbolLedger {
   transport: any
+  $store: Store<any>
 
   constructor(transport: any, scrambleKey: string) {
     this.transport = transport
@@ -98,9 +101,7 @@ export class SymbolLedger {
     // The length of the APDU buffer is 255Bytes
     if (rawTx.length > 446) {
       console.log('Length of rawTx is over than 446')
-      app.$Notice.error({
-        title: 'Transaction length is over the limit.' + '',
-      })
+      this.$store.dispatch('notification/ADD_ERROR', NotificationType.TRANSACTION_LENGTH_IS_OVER_THE_LIMIT)
     } else {
       twiceTransfer = rawTx.length > 234 ? true : false
     }
@@ -112,9 +113,7 @@ export class SymbolLedger {
       })
       .catch((err) => {
         console.log(err)
-        app.$Notice.error({
-          title: 'Transaction canceled.' + '',
-        })
+        this.$store.dispatch('notification/ADD_ERROR', NotificationType.TRANSACTION_CANCELED)
       })
 
     // Response from Ledger
@@ -144,9 +143,7 @@ export class SymbolLedger {
     let twiceTransfer
     // The length of the APDU buffer is 255Bytes
     if (rawTx.length > 446) {
-      app.$Notice.error({
-        title: this['$t']('Transaction length is over the limit.') + '',
-      })
+      this.$store.dispatch('notification/ADD_ERROR', NotificationType.TRANSACTION_LENGTH_IS_OVER_THE_LIMIT)
     } else {
       twiceTransfer = rawTx.length > 234 ? true : false
     }

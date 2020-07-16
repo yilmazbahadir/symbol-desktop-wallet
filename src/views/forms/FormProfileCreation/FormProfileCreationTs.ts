@@ -202,18 +202,14 @@ export class FormProfileCreationTs extends Vue {
   }
 
   toAccountDetails() {
-    this.$Notice.success({
-      title: this['$t']('Imported Account Successfully') + '',
-    })
+    this.$store.dispatch('notification/ADD_SUCCESS', NotificationType.IMPORT_ACCOUNT_SUCCESSFULLY)
     this.$router.push('/dashboard')
   }
 
   async importAccountFromLedger(): Promise<AccountModel> {
     const profileName = this.formItems.profileName
     // try {
-    this.$Notice.success({
-      title: this['$t']('Verify information in your device!') + '',
-    })
+    this.$store.dispatch('notification/ADD_SUCCESS', NotificationType.VERIFY_DEVICE_INFO)
     // const transport = await TransportWebUSB.create()
     // const symbolLedger = new SymbolLedger(transport, 'XYM')
     const accountResult = await this.ledgerService.getAccount(`m/44'/4343'/0'/0'/0'`)
@@ -236,10 +232,5 @@ export class FormProfileCreationTs extends Vue {
       path: path,
       isMultisig: false,
     }
-    // } catch (e) {
-    //   this.$Notice.error({
-    //     title: this['$t']('CONDITIONS OF USE NOT SATISFIED') + '',
-    //   })
-    // }
   }
 }

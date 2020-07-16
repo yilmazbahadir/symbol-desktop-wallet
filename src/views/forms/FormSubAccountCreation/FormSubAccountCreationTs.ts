@@ -289,9 +289,7 @@ export class FormSubAccountCreationTs extends Vue {
 
   async importSubAccountFromLedger(childAccountName: string): Promise<AccountModel> | null {
     try {
-      this.$Notice.success({
-        title: this['$t']('Verify information in your device!') + '',
-      })
+      this.$store.dispatch('notification/ADD_SUCCESS', NotificationType.VERIFY_DEVICE_INFO)
       // const transport = await TransportWebUSB.create()
       // const symbolLedger = new SymbolLedger(transport, 'XYM')
       const nextPath = this.paths.getNextAccountPath(this.knownPaths)
@@ -317,9 +315,7 @@ export class FormSubAccountCreationTs extends Vue {
         isDisabled: false,
         message: '',
       })
-      this.$Notice.error({
-        title: this['$t']('CONDITIONS_OF_USE_NOT_SATISFIED') + '',
-      })
+      this.$store.dispatch('notification/ADD_ERROR', NotificationType.CONDITIONS_OF_USE_NOT_SATISFIED)
     }
   }
 }

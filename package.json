@@ -41,6 +41,7 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "request": "^2.88.0",
+    "vee-validate": "^3.2.3",
     "vue-i18n": "^8.11.2",
     "vue-moment": "^4.1.0",
     "vue-number-animation": "1.0.5",

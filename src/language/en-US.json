@@ -550,6 +550,7 @@
   "variable_supply": "Supply mutable",
   "verify_Mnemonic_phrase": "Verify Mnemonic Phrase",
   "verify_backup_mnemonics": "Next",
+  "verify_information_in_your_device": "verify information in your device!",
   "verify_mnemonics": "Verify mnemonic words backup",
   "warning_already_a_cosignatory": "This account is already a cosignatory!",
   "welcome": "Welcome",
@@ -591,5 +592,9 @@
   "settings_tab_general": "General settings",
   "settings_tab_password": "Profile password",
   "settings_tab_network": "Network settings",
-  "settings_tab_about": "About"
+  "settings_tab_about": "About",
+  "conditions_of_use_not_satisfied": "Conditions of use not satisfied!",
+  "transaction_length_is_over_the_limit": "Transaction length is over the limit!",
+  "transaction_canceled": "Transaction canceled",
+  "import_account_successfully": "Import account successfully!"
 }
