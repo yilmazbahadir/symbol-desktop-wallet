@@ -30,6 +30,7 @@ import NamespaceStore from '@/store/Namespace';
 import TransactionStore from '@/store/Transaction';
 import StatisticsStore from '@/store/Statistics';
 import CommunityStore from '@/store/Community';
+import HarvestingStore from '@/store/Harvesting';
 import { onPeerConnection } from '@/store/plugins/onPeerConnection';
 // use AwaitLock for initialization routines
 import { AwaitLock } from '@/store/AwaitLock';
@@ -61,6 +62,7 @@ const AppStore = new Vuex.Store({
         statistics: StatisticsStore,
         community: CommunityStore,
         block: BlockStore,
+        harvesting: HarvestingStore,
     },
     plugins: [onPeerConnection],
     actions: {

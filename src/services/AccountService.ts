@@ -63,6 +63,10 @@ export class AccountService {
         return this.saveAccount(Object.assign(account, { encRemoteAccountPrivateKey }));
     }
 
+    public updateVrfAccount(account: AccountModel, encVrfAccountPrivateKey: string): AccountModel {
+        return this.saveAccount(Object.assign(account, { encVrfAccountPrivateKey }));
+    }
+
     /**
      * Derive \a path using \a mnemonic pass phrase
      */
