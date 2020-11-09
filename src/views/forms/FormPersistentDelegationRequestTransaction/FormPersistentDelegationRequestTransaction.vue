@@ -5,9 +5,7 @@
                 <form onsubmit="event.preventDefault()">
                     <div class="info-text">
                         <span>
-                            Storj, IoDLT and Nem have come together to create a unique storage soluton to facilitate faster syncing time
-                            when setting up a node on the Symbol network, whether that is rebuilding an old node or starting a new one. The
-                            Tardigrade Connector Streamlines the amount of time it takes to...
+                            {{ $t('delegated_harvesting_info') }}
                         </span>
                     </div>
 
@@ -15,7 +13,7 @@
                     <SignerSelector v-model="formItems.signerAddress" :signers="signers" @input="onChangeSigner" />
 
                     <!-- Node URL Selector -->
-                    <NetworkNodeSelector v-model="formItems.nodePublicKey" @change="onNodeChange" />
+                    <NetworkNodeSelector v-model="formItems.nodePublicKey" />
 
                     <!-- Transaction fee selector and submit button -->
 
@@ -31,7 +29,7 @@
                                     {{ $t('start') }}
                                 </button>
                                 <button
-                                    v-if="harvestingStatus === 'ACTIVE'"
+                                    v-if="harvestingStatus !== 'INACTIVE'"
                                     type="submit"
                                     class="centered-button button-style submit-button inverted-button"
                                     :disabled="swapDisabled"
@@ -40,7 +38,7 @@
                                     {{ $t('swap') }}
                                 </button>
                                 <button
-                                    v-if="harvestingStatus === 'ACTIVE'"
+                                    v-if="harvestingStatus !== 'INACTIVE'"
                                     type="submit"
                                     class="centered-button button-style submit-button danger-button"
                                     @click="handleSubmit(onStop())"

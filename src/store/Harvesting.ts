@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, reduce, tap } from 'rxjs/operators';
 /*
  * Copyright 2020 NEM (https://nem.io)
  *
@@ -15,43 +15,90 @@ import { map } from 'rxjs/operators';
  * See the License for the specific language governing permissions and limitations under the License.
  *
  */
-import { Address, BalanceChangeReceipt, ReceiptPaginationStreamer, ReceiptType, RepositoryFactory, UInt64 } from 'symbol-sdk';
+import {
+    AccountInfo,
+    Address,
+    BalanceChangeReceipt,
+    Order,
+    ReceiptPaginationStreamer,
+    ReceiptType,
+    RepositoryFactory,
+    RepositoryFactoryHttp,
+    UInt64,
+} from 'symbol-sdk';
 import Vue from 'vue';
 // internal dependencies
 import { AwaitLock } from './AwaitLock';
+import { PageInfo } from '@/store/Transaction';
+import { NodeModel } from '@/core/database/entities/NodeModel';
 
 const Lock = AwaitLock.create();
 
-export type IHarvestedBlock = {
-    blockNo: number;
+export type HarvestedBlock = {
+    blockNo: UInt64;
     fee: UInt64;
 };
 
+export type HarvestedBlockStats = {
+    totalBlockCount: number;
+    totalFeesEarned: UInt64;
+};
+
+export enum HarvestingStatus {
+    ACTIVE = 'ACTIVE',
+    INACTIVE = 'INACTIVE',
+    INPROGRESS_ACTIVATION = 'INPROGRESS_ACTIVATION',
+    INPROGRESS_DEACTIVATION = 'INPROGRESS_DEACTIVATION',
+}
 interface HarvestingState {
     initialized: boolean;
-    harvestedBlocks: Observable<IHarvestedBlock>;
+    harvestedBlocks: HarvestedBlock[];
     isFetchingHarvestedBlocks: boolean;
+    harvestedBlocksPageInfo: PageInfo;
+    status: HarvestingStatus;
+    harvestedBlockStats: HarvestedBlockStats;
+    isFetchingHarvestedBlockStats: boolean;
 }
+
+const initialState: HarvestingState = {
+    initialized: false,
+    harvestedBlocks: null,
+    isFetchingHarvestedBlocks: false,
+    harvestedBlocksPageInfo: { pageNumber: 1, isLastPage: false },
+    status: HarvestingStatus.INACTIVE,
+    harvestedBlockStats: {
+        totalBlockCount: 0,
+        totalFeesEarned: UInt64.fromUint(0),
+    },
+    isFetchingHarvestedBlockStats: false,
+};
 
 export default {
     namespaced: true,
-    state: {
-        initialized: false,
-        harvestedBlocks: null,
-        isFetchingHarvestedBlocks: false,
-    },
+    state: initialState,
     getters: {
         getInitialized: (state) => state.initialized,
         harvestedBlocks: (state) => state.harvestedBlocks,
         isFetchingHarvestedBlocks: (state) => state.isFetchingHarvestedBlocks,
+        harvestedBlocksPageInfo: (state) => state.harvestedBlocksPageInfo,
+        status: (state) => state.status,
+        harvestedBlockStats: (state) => state.harvestedBlockStats,
+        isFetchingHarvestedBlockStats: (state) => state.isFetchingHarvestedBlockStats,
     },
     mutations: {
         setInitialized: (state, initialized) => {
             state.initialized = initialized;
         },
-        harvestedBlocks: (state, harvestedBlocks) => Vue.set(state, 'harvestedBlocks', harvestedBlocks),
+        harvestedBlocks: (state, { harvestedBlocks, pageInfo }) => {
+            Vue.set(state, 'harvestedBlocks', harvestedBlocks);
+            Vue.set(state, 'harvestedBlocksPageInfo', pageInfo);
+        },
         isFetchingHarvestedBlocks: (state, isFetchingHarvestedBlocks) =>
             Vue.set(state, 'isFetchingHarvestedBlocks', isFetchingHarvestedBlocks),
+        status: (state, status) => Vue.set(state, 'status', status),
+        harvestedBlockStats: (state, harvestedBlockStats) => Vue.set(state, 'harvestedBlockStats', harvestedBlockStats),
+        isFetchingHarvestedBlockStats: (state, isFetchingHarvestedBlockStats) =>
+            Vue.set(state, 'isFetchingHarvestedBlockStats', isFetchingHarvestedBlockStats),
     },
     actions: {
         async initialize({ commit, getters }) {
@@ -71,36 +118,134 @@ export default {
         },
         /// region scoped actions
         RESET_STATE({ commit }) {
-            commit('harvestedBlocks', null);
-            commit('isFetchingHarvestedBlocks', null);
+            commit('harvestedBlocks', { harvestedBlocks: null, pageInfo: { pageNumber: 1, isLastPage: false } });
+            commit('isFetchingHarvestedBlocks', false);
         },
-        STREAMER_HARVESTED_BLOCKS({ commit, rootGetters }, { pageNumber, pageSize }: { pageNumber: number; pageSize: number }) {
+        async FETCH_STATUS({ commit, rootGetters }) {
+            const currentSignerAccountInfo: AccountInfo = rootGetters['account/currentSignerAccountInfo'];
+            const knownNodes: NodeModel[] = rootGetters['network/knowNodes'];
+            // reset
+            commit('status', HarvestingStatus.INACTIVE);
+            if (!currentSignerAccountInfo) {
+                return;
+            }
+            /* note: uncomment when SDK and REST is ready
+            
+            //find the node url from supplementalPublicKeys
+            const nodePublicKey = currentSignerAccountInfo.supplementalPublicKeys?.node?.publicKey;
+            const harvestingNodeUrl = knownNodes.find((n) => n.publicKey === nodePublicKey)?.url;
+            if (!harvestingNodeUrl) {
+                return;
+            }
+            const repositoryFactory = new RepositoryFactoryHttp(harvestingNodeUrl);
+            const nodeRepository = repositoryFactory.createNodeRepository();
+            let unlockedAccounts: string[] = await nodeRepository.getUnlockedAccount('to_be_replaced').toPromise();
+
+            const allKeysLinked =
+                currentSignerAccountInfo.supplementalPublicKeys?.linked &&
+                currentSignerAccountInfo.supplementalPublicKeys?.node &&
+                currentSignerAccountInfo.supplementalPublicKeys?.vrf;
+            const accountUnlocked = unlockedAccounts?.some((publicKey) => publicKey === currentSignerAccountInfo.publicKey);
+            if (allKeysLinked) {
+                commit('status', accountUnlocked ? HarvestingStatus.ACTIVE : HarvestingStatus.INPROGRESS_ACTIVATION);
+            } else {
+                commit('status', accountUnlocked ? HarvestingStatus.INPROGRESS_DEACTIVATION : HarvestingStatus.INACTIVE);
+            }
+            */
+            const allKeysLinked =
+                currentSignerAccountInfo.supplementalPublicKeys?.linked &&
+                currentSignerAccountInfo.supplementalPublicKeys?.node &&
+                currentSignerAccountInfo.supplementalPublicKeys?.vrf;
+            commit('status', allKeysLinked ? HarvestingStatus.ACTIVE : HarvestingStatus.INACTIVE);
+        },
+        LOAD_HARVESTED_BLOCKS({ commit, rootGetters }, { pageNumber, pageSize }: { pageNumber: number; pageSize: number }) {
+            const repositoryFactory: RepositoryFactory = rootGetters['network/repositoryFactory'];
+            const receiptRepository = repositoryFactory.createReceiptRepository();
+
+            const currentSignerAddress: Address = rootGetters['account/currentSignerAddress'];
+            if (!currentSignerAddress) {
+                return;
+            }
+
+            const targetAddress = currentSignerAddress;
+            // for testing => const targetAddress = Address.createFromRawAddress('TD5YTEJNHOMHTMS6XESYAFYUE36COQKPW6MQQQY');
+
+            commit('isFetchingHarvestedBlocks', true);
+
+            receiptRepository
+                .searchReceipts({
+                    targetAddress: targetAddress,
+                    receiptTypes: [ReceiptType.Harvest_Fee],
+                    pageNumber: pageNumber,
+                    pageSize: pageSize,
+                    order: Order.Desc,
+                })
+                .pipe(
+                    map((pageTxStatement) => {
+                        const harvestedBlocks = pageTxStatement.data.map(
+                            (t) =>
+                                (({
+                                    blockNo: t.height,
+                                    fee: (t.receipts as BalanceChangeReceipt[]).find(
+                                        (r) => r.targetAddress.plain() === targetAddress.plain(),
+                                    )?.amount,
+                                } as unknown) as HarvestedBlock),
+                        );
+                        const pageInfo = { isLastPage: pageTxStatement.isLastPage, pageNumber: pageTxStatement.pageNumber };
+
+                        commit('harvestedBlocks', { harvestedBlocks, pageInfo });
+                    }),
+                )
+                .subscribe({ complete: () => commit('isFetchingHarvestedBlocks', false) });
+        },
+        LOAD_HARVESTED_BLOCKS_STATS({ commit, rootGetters }) {
             const repositoryFactory: RepositoryFactory = rootGetters['network/repositoryFactory'];
             const receiptRepository = repositoryFactory.createReceiptRepository();
             const streamer = ReceiptPaginationStreamer.transactionStatements(receiptRepository);
 
-            const result = streamer
+            const currentSignerAddress: Address = rootGetters['account/currentSignerAddress'];
+            if (!currentSignerAddress) {
+                return;
+            }
+
+            const targetAddress = currentSignerAddress;
+            // for testing => const targetAddress = Address.createFromRawAddress('TD5YTEJNHOMHTMS6XESYAFYUE36COQKPW6MQQQY');
+
+            commit('isFetchingHarvestedBlockStats', true);
+            let counter = 0;
+            streamer
                 .search({
-                    pageSize: 20,
-                    height: UInt64.fromUint(1),
-                    targetAddress: Address.createFromRawAddress('TD5YTEJNHOMHTMS6XESYAFYUE36COQKPW6MQQQY'),
+                    targetAddress: targetAddress,
                     receiptTypes: [ReceiptType.Harvest_Fee],
+                    pageNumber: 1,
+                    pageSize: 50,
                 })
                 .pipe(
                     map(
                         (t) =>
                             (({
                                 blockNo: t.height,
-                                fee: (t.receipts as BalanceChangeReceipt[]).find(
-                                    (r) => r.targetAddress === Address.createFromRawAddress('TD5YTEJNHOMHTMS6XESYAFYUE36COQKPW6MQQQY'),
-                                ).amount,
-                            } as unknown) as IHarvestedBlock),
+                                fee: (t.receipts as BalanceChangeReceipt[]).find((r) => r.targetAddress.plain() === targetAddress.plain())
+                                    .amount,
+                            } as unknown) as HarvestedBlock),
                     ),
-                );
-
-            const test = { blockNo: 0, fee: UInt64.fromNumericString('0') } as IHarvestedBlock;
-
-            commit('harvestedBlocks', result);
+                    reduce(
+                        (acc, harvestedBlock) => ({
+                            totalBlockCount: counter++,
+                            totalFeesEarned: acc.totalFeesEarned.add(harvestedBlock.fee),
+                        }),
+                        {
+                            totalBlockCount: 0,
+                            totalFeesEarned: UInt64.fromUint(0),
+                        },
+                    ),
+                )
+                .subscribe({
+                    next: (harvestedBlockStats) => {
+                        commit('harvestedBlockStats', harvestedBlockStats);
+                    },
+                    complete: () => commit('isFetchingHarvestedBlockStats', false),
+                });
         },
         /// end-region scoped actions
     },

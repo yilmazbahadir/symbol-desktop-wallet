@@ -48,6 +48,7 @@ import NetworkNodeSelector from '@/components/NetworkNodeSelector/NetworkNodeSel
 import FormRow from '@/components/FormRow/FormRow.vue';
 
 import { feesConfig } from '@/config';
+import { HarvestingStatus } from '@/store/Harvesting';
 
 @Component({
     components: {
@@ -63,6 +64,7 @@ import { feesConfig } from '@/config';
         ...mapGetters({
             currentHeight: 'network/currentHeight',
             currentSignerAccountInfo: 'account/currentSignerAccountInfo',
+            harvestingStatus: 'harvesting/status',
         }),
     },
 })
@@ -93,7 +95,7 @@ export class FormPersistentDelegationRequestTransactionTs extends FormTransactio
 
     private action = HarvestingAction.START;
 
-    private harvestingStatus = HarvestingStatus.INACTIVE;
+    private harvestingStatus: HarvestingStatus;
 
     /**
      * Reset the form with properties
@@ -110,8 +112,6 @@ export class FormPersistentDelegationRequestTransactionTs extends FormTransactio
     @Watch('currentSignerAccountInfo', { immediate: true })
     private currentSignerWatch() {
         this.formItems.signerAddress = this.signerAddress || this.currentSignerAccountInfo?.address.plain();
-
-        this.setHarvestingStatus();
 
         if (this.isNodeKeyLinked) {
             this.formItems.nodePublicKey = this.currentSignerAccountInfo?.supplementalPublicKeys.node.publicKey;
@@ -194,11 +194,6 @@ export class FormPersistentDelegationRequestTransactionTs extends FormTransactio
         return NodeKeyLinkTransaction.create(this.createDeadline(), publicKey, linkAction, this.networkType, maxFee);
     }
 
-    private setHarvestingStatus() {
-        // TODO change this logic so that it depends the node-unlockedAccounts result
-        this.harvestingStatus = this.allKeysLinked ? HarvestingStatus.ACTIVE : HarvestingStatus.INACTIVE;
-    }
-
     /**
      * Whether all keys are linked
      */
@@ -262,7 +257,7 @@ export class FormPersistentDelegationRequestTransactionTs extends FormTransactio
     }
 
     public get swapDisabled(): boolean {
-        return this.formItems.nodePublicKey === this.currentSignerAccountInfo.supplementalPublicKeys?.node.publicKey;
+        return this.formItems.nodePublicKey === this.currentSignerAccountInfo.supplementalPublicKeys?.node?.publicKey;
     }
 
     public onSubmit() {
@@ -276,30 +271,10 @@ export class FormPersistentDelegationRequestTransactionTs extends FormTransactio
         this.onShowConfirmationModal();
         return this.command;
     }
-
-    protected onNodeChange(nodePublicKey) {
-        //this.$emit('setNodePublicKey', nodePublicKey);
-    }
-
-    public onConfirmationSuccess() {
-        // set account and vrf private keys
-        console.log('success');
-        super.onConfirmationSuccess();
-    }
-
-    public onAccountUnlocked() {
-        // TODO decrypt remote and vrf account private keys and set to accounts (Account.createFromPrivateKey)
-        // Change account model to store vrf privateKey
-    }
 }
 
 export enum HarvestingAction {
     START = 1,
     STOP = 2,
     SWAP = 3,
-}
-
-export enum HarvestingStatus {
-    ACTIVE = 'ACTIVE',
-    INACTIVE = 'INACTIVE',
 }

@@ -727,5 +727,10 @@
   "x_seconds": "{seconds}s.",
   "progress": "Download in progress.",
   "swap": "Swap",
-  "start": "Start"
+  "start": "Start",
+  "delegated_harvesting_info": "Delegated harvesting allows using the importance score of an account to create new blocks and receive rewards\n                            without having to run a node locally. You can send a Delegated Harvesting Request to the selected Node or swap\n                            to another one.",
+  "fees_earned": "Fees Earned",
+  "harvesting_status": "Harvesting status",
+  "blocks_made": "Blocks made",
+  "fees_collected": "Fees collected"
 }

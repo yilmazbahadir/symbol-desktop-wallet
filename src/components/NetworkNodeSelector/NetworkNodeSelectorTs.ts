@@ -1,6 +1,5 @@
 // external dependencies
 import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
-import { NodeHttp, NodeInfo, RepositoryFactoryHttp } from 'symbol-sdk';
 import { mapGetters } from 'vuex';
 
 // internal dependencies
@@ -12,7 +11,6 @@ import { NodeModel } from '@/core/database/entities/NodeModel';
 import FormWrapper from '@/components/FormWrapper/FormWrapper.vue';
 // @ts-ignore
 import FormRow from '@/components/FormRow/FormRow.vue';
-import { NodeService } from '@/services/NodeService';
 
 @Component({
     components: {
@@ -22,7 +20,6 @@ import { NodeService } from '@/services/NodeService';
     computed: {
         ...mapGetters({
             knownNodes: 'network/knowNodes',
-            repositoryFactory: 'network/repositoryFactory',
         }),
     },
 })
@@ -47,7 +44,6 @@ export class NetworkNodeSelectorTs extends Vue {
 
     public isFetchingNodeInfo = false;
 
-    private nodeService: NodeService;
     /**
      * Hook called when the submit button is clicked
      * @protected
@@ -90,7 +86,6 @@ export class NetworkNodeSelectorTs extends Vue {
 
     public created() {
         this.customNodeData = this.knownNodes.map((n) => n.url);
-        this.nodeService = new NodeService();
     }
 
     @Watch('knownNodes')

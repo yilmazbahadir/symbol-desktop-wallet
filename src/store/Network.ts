@@ -344,10 +344,7 @@ export default {
         },
 
         async UPDATE_PEER({ commit, rootGetters }, peerUrl) {
-            const repositoryFactory = new RepositoryFactoryHttp(peerUrl, {
-                websocketUrl: URLHelpers.httpToWsUrl(peerUrl) + '/ws',
-                websocketInjected: WebSocket,
-            });
+            const repositoryFactory = new RepositoryFactoryHttp(peerUrl);
             const nodeService = new NodeService();
 
             const knownNodes = await nodeService.getNodes(repositoryFactory, peerUrl).toPromise();

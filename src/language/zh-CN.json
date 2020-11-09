@@ -724,5 +724,10 @@
   "x_seconds": "{seconds}秒",
   "progress": "正在下载",
   "swap": "交换",
-  "start": "开始"
+  "start": "开始",
+  "delegated_harvesting_info": "委托收获允许使用帐户的重要性得分来创建新区块并获得奖励\n                            \n无需在本地运行节点。\n您可以将委派的收获请求发送到选定的节点或交换\n                            \n到另一个。",
+  "fees_earned": "赚到的钱",
+  "harvesting_status": "收割状态",
+  "blocks_made": "积木",
+  "fees_collected": "收费"
 }
